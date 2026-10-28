@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Ouija Offline</title>
+  <meta name="description" content="A séance in your pocket. An open-weight LLM runs entirely on your phone and speaks through a Ouija board — no server, no account, works in airplane mode.">
+  <meta name="theme-color" content="#0b0705">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="app.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div class="fog" aria-hidden="true"></div>
+  <div class="candlelight" aria-hidden="true"></div>
+
+  <!-- 1. Choose the vessel (the open-weight model that will carry the spirits) -->
+  <section id="screen-vessel" class="screen" hidden>
+    <header class="title">
+      <h1>Ouija <span>Offline</span></h1>
+      <p class="tagline">A séance in your pocket. The spirits live on <em>your</em> device.</p>
+    </header>
+
+    <div class="panel">
+      <h2>I. Choose a vessel</h2>
+      <p class="hint">Spirits need a body. Pick an open-weight model. It downloads once, is kept on this device,
+        and every séance after that runs with <strong>no internet at all</strong>. Try airplane mode.</p>
+      <ul id="vessels" class="vessels"></ul>
+      <label class="byo">
+        <input type="file" id="byo-file" accept=".gguf" hidden>
+        <span>…or bring your own spirit: load any <code>.gguf</code> file from this device</span>
+      </label>
+      <p id="device-info" class="device-info"></p>
+    </div>
+
+    <div id="load-status" class="load-status" hidden>
+      <div class="bar"><div class="fill"></div></div>
+      <p class="msg"></p>
+      <button type="button" class="ghost-btn" id="load-cancel">Cancel</button>
+    </div>
+  </section>
+
+  <!-- 2. Choose who to call -->
+  <section id="screen-spirits" class="screen" hidden>
+    <header class="title small">
+      <h1>Ouija <span>Offline</span></h1>
+      <p class="tagline" id="vessel-line"></p>
+    </header>
+    <div class="panel">
+      <h2>II. Who will you call?</h2>
+      <ul id="spirits" class="spirits"></ul>
+    </div>
+    <button type="button" class="link-btn" id="change-vessel">Change vessel</button>
+
+    <dialog id="remember-dialog" class="remember">
+      <form method="dialog" id="remember-form">
+        <h2>Someone you remember</h2>
+        <p class="hint">For Día de los Muertos. What you write here stays in this phone's storage and is
+          only ever read by the model running on this phone.</p>
+        <label>Their name <input name="name" required maxlength="40" placeholder="Abuela Rosa"></label>
+        <label>Who they were to you <input name="relation" maxlength="60" placeholder="my grandmother"></label>
+        <label>Things they loved, said, or did
+          <textarea name="memories" rows="4" maxlength="600" placeholder="Made tamales every Christmas. Called me mijo. Loved Pedro Infante songs and cempasúchil."></textarea></label>
+        <div class="row">
+          <button type="button" value="cancel" class="ghost-btn" id="remember-cancel">Cancel</button>
+          <button type="submit" value="ok" class="primary-btn">Light the candle</button>
+        </div>
+      </form>
+    </dialog>
+  </section>
+
+  <!-- 3. The board -->
+  <section id="screen-seance" class="screen seance" hidden>
+    <header class="seance-bar">
+      <button type="button" class="icon-btn" id="leave" aria-label="Leave the séance">‹</button>
+      <div class="who">
+        <div id="spirit-name"></div>
+        <div class="chips"><span id="chip-engine" class="chip"></span><span id="chip-net" class="chip"></span></div>
+      </div>
+      <button type="button" class="icon-btn" id="sound-toggle" aria-label="Toggle sound">🔊</button>
+    </header>
+
+    <div class="board-wrap">
+      <div id="board" class="board" aria-hidden="true">
+        <div class="board-inner"></div>
+        <div id="planchette" class="planchette">
+          <svg viewBox="0 0 100 120" aria-hidden="true">
+            <defs>
+              <radialGradient id="glass" cx="45%" cy="40%" r="60%">
+                <stop offset="0" stop-color="#fff8e0" stop-opacity=".35"/>
+                <stop offset=".7" stop-color="#e8d9b0" stop-opacity=".08"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".25"/>
+              </radialGradient>
+              <linearGradient id="bone" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#e9dcc0"/><stop offset="1" stop-color="#b9a47c"/>
+              </linearGradient>
+            </defs>
+            <path d="M50 4 C78 4 96 30 92 62 C88 92 66 116 50 116 C34 116 12 92 8 62 C4 30 22 4 50 4Z"
+                  fill="url(#bone)" stroke="#3a2614" stroke-width="3"/>
+            <path d="M50 12 C72 12 86 34 83 60 C80 86 63 106 50 106 C37 106 20 86 17 60 C14 34 28 12 50 12Z"
+                  fill="none" stroke="#7a5a34" stroke-width="1.2" stroke-dasharray="2 3"/>
+            <circle cx="50" cy="44" r="17" fill="#120a05" stroke="#3a2614" stroke-width="3"/>
+            <circle cx="50" cy="44" r="17" fill="url(#glass)"/>
+            <path d="M40 80 q10 8 20 0" stroke="#5b3e20" stroke-width="2" fill="none"/>
+            <circle cx="50" cy="92" r="2.5" fill="#5b3e20"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="spelled" aria-live="polite">
+      <div id="spelled" class="letters"></div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <ol id="log" class="log"></ol>
+
+    <form id="ask-form" class="ask">
+      <input id="ask-input" autocomplete="off" enterkeyhint="send" maxlength="160" placeholder="Ask the spirit…" aria-label="Your question">
+      <button type="submit" class="primary-btn" id="ask-btn">Ask</button>
+    </form>
+    <div class="quick" id="quick"></div>
+  </section>
+
+  <noscript><p class="noscript">The spirits need JavaScript to speak.</p></noscript>
+</body>
+</html>
